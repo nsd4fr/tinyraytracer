@@ -6,6 +6,7 @@
 #include <vector>
 #include <algorithm>
 #include "geometry.h"
+#include "timer.h"
 
 struct Light {
     Light(const Vec3f &p, const float &i) : position(p), intensity(i) {}
@@ -62,13 +63,14 @@ Vec3f refract(const Vec3f &I, const Vec3f &N, const float &refractive_index) { /
 
 bool scene_intersect(const Vec3f &orig, const Vec3f &dir, const std::vector<Sphere> &spheres, Vec3f &hit, Vec3f &N, Material &material) {
     float spheres_dist = std::numeric_limits<float>::max();
-    for (size_t i=0; i < spheres.size(); i++) {
+    for (auto it=spheres.begin(); it!= spheres.end(); ++it) {//New
         float dist_i;
-        if (spheres[i].ray_intersect(orig, dir, dist_i) && dist_i < spheres_dist) {
+	if (it->ray_intersect(orig, dir, dist_i) && dist_i < spheres_dist) { //New
             spheres_dist = dist_i;
             hit = orig + dir*dist_i;
-            N = (hit - spheres[i].center).normalize();
-            material = spheres[i].material;
+            
+	    N = (hit - (it->center)).normalize(); //New
+	    material = (it->material); //New
         }
     }
 
@@ -102,9 +104,14 @@ Vec3f cast_ray(const Vec3f &orig, const Vec3f &dir, const std::vector<Sphere> &s
     Vec3f refract_color = cast_ray(refract_orig, refract_dir, spheres, lights, depth + 1);
 
     float diffuse_light_intensity = 0, specular_light_intensity = 0;
-    for (size_t i=0; i<lights.size(); i++) {
-        Vec3f light_dir      = (lights[i].position - point).normalize();
-        float light_distance = (lights[i].position - point).norm();
+    for (auto it=lights.begin(); it!=lights.end(); ++it){ //New
+      
+      //NEW
+      
+      Vec3f light_dir = (it->position - point).normalize();
+      float light_distance = (it->position - point).norm();
+      
+      //End NEW
 
         Vec3f shadow_orig = light_dir*N < 0 ? point - N*1e-3 : point + N*1e-3; // checking if the point lies in the shadow of the lights[i]
         Vec3f shadow_pt, shadow_N;
@@ -112,8 +119,14 @@ Vec3f cast_ray(const Vec3f &orig, const Vec3f &dir, const std::vector<Sphere> &s
         if (scene_intersect(shadow_orig, light_dir, spheres, shadow_pt, shadow_N, tmpmaterial) && (shadow_pt-shadow_orig).norm() < light_distance)
             continue;
 
-        diffuse_light_intensity  += lights[i].intensity * std::max(0.f, light_dir*N);
-        specular_light_intensity += powf(std::max(0.f, -reflect(-light_dir, N)*dir), material.specular_exponent)*lights[i].intensity;
+
+	//NEW
+	
+	diffuse_light_intensity += it->intensity * std::max(0.0f, light_dir * N);
+	specular_light_intensity += powf(std::max(0.0f, -reflect(-light_dir, N)*dir), material.specular_exponent)*(it->intensity);
+	
+	//End NEW
+      
     }
     return material.diffuse_color * diffuse_light_intensity * material.albedo[0] + Vec3f(1., 1., 1.)*specular_light_intensity * material.albedo[1] + reflect_color*material.albedo[2] + refract_color*material.albedo[3];
 }
@@ -155,17 +168,57 @@ int main() {
     Material     mirror(1.0, Vec4f(0.0, 10.0, 0.8, 0.0), Vec3f(1.0, 1.0, 1.0), 1425.);
 
     std::vector<Sphere> spheres;
-    spheres.push_back(Sphere(Vec3f(-3,    0,   -16), 2,      ivory));
-    spheres.push_back(Sphere(Vec3f(-1.0, -1.5, -12), 2,      glass));
+    spheres.push_back(Sphere(Vec3f(10,    8,   -16), 1,      ivory));
+    spheres.push_back(Sphere(Vec3f(-1.0, -1.5, -12), 1,      glass));
+    spheres.push_back(Sphere(Vec3f( 1.5, -0.5, -18), 1, red_rubber));
+    spheres.push_back(Sphere(Vec3f( 7,    5,   -18), 1,     mirror));
+    
+    //Duplicate of the above
+    spheres.push_back(Sphere(Vec3f(10,    8,   -16), 1.1,      ivory));
+    spheres.push_back(Sphere(Vec3f(-1.0, -1.5, -12), 1.1,      glass));
+    spheres.push_back(Sphere(Vec3f( 1.5, -0.5, -18), 1.1, red_rubber));
+    spheres.push_back(Sphere(Vec3f( 7,    5,   -18), 1.1,     mirror));
+
+    //Duplicate of the above
+    spheres.push_back(Sphere(Vec3f(10,    8,   -16), 1.2,      ivory));
+    spheres.push_back(Sphere(Vec3f(-1.0, -1.5, -12), 1.2,      glass));
+    spheres.push_back(Sphere(Vec3f( 1.5, -0.5, -18), 1.2, red_rubber));
+    spheres.push_back(Sphere(Vec3f( 7,    5,   -18), 1.2,     mirror));
+
+    //Duplicate of the above
+    spheres.push_back(Sphere(Vec3f(10,    8,   -16), 1.3,      ivory));
+    spheres.push_back(Sphere(Vec3f(-1.0, -1.5, -12), 1.3,      glass));
+    spheres.push_back(Sphere(Vec3f( 1.5, -0.5, -18), 1.3, red_rubber));
+    spheres.push_back(Sphere(Vec3f( 7,    5,   -18), 1.3,     mirror));
+    
+    //Duplicate of the above
+    spheres.push_back(Sphere(Vec3f(10,    8,   -16), 1.4,      ivory));
+    spheres.push_back(Sphere(Vec3f(-1.0, -1.5, -12), 1.4,      glass));
+    spheres.push_back(Sphere(Vec3f( 1.5, -0.5, -18), 1.4, red_rubber));
+    spheres.push_back(Sphere(Vec3f( 7,    5,   -18), 1.4,     mirror));
+    
+    //Duplicate of the above
+    spheres.push_back(Sphere(Vec3f(10,    8,   -16), 1.4,      ivory));
+    spheres.push_back(Sphere(Vec3f(-1.0, -1.5, -12), 1.4,      glass));
+    spheres.push_back(Sphere(Vec3f( 1.5, -0.5, -18), 1.4, red_rubber));
+    spheres.push_back(Sphere(Vec3f( 7,    5,   -18), 1.4,     mirror));
+
+    spheres.push_back(Sphere(Vec3f(-3,    0,   -16), 3,      ivory));
+    spheres.push_back(Sphere(Vec3f(-1.0, -1.5, -12), 3,      glass));
     spheres.push_back(Sphere(Vec3f( 1.5, -0.5, -18), 3, red_rubber));
-    spheres.push_back(Sphere(Vec3f( 7,    5,   -18), 4,     mirror));
+    spheres.push_back(Sphere(Vec3f( 7,    5,   -18), 3,     mirror));
 
     std::vector<Light>  lights;
     lights.push_back(Light(Vec3f(-20, 20,  20), 1.5));
     lights.push_back(Light(Vec3f( 30, 50, -25), 1.8));
     lights.push_back(Light(Vec3f( 30, 20,  30), 1.7));
 
+    timer t;
+    std::cout << "Starting timer" << std::endl;
+    t.start();
     render(spheres, lights);
-
+    t.stop();
+    double time_s = t.getTime();
+    std::cout << "Total time taken is " << time_s << " seconds" << std::endl;
     return 0;
 }
